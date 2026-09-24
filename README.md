@@ -40,6 +40,7 @@ Esses arquivos incluem:
 ## 📊 Exemplo de comando SQL
 
 ```sql
+-- Cartão
 CREATE TABLE T_NS_CARTAO
 (
     id_cartao       INT IDENTITY(1,1) NOT NULL,
@@ -56,6 +57,31 @@ GO
 ALTER TABLE T_NS_CARTAO 
 ADD CONSTRAINT PK_CARTAO 
 PRIMARY KEY CLUSTERED (id_cartao);
+GO
+
+-- Crédito
+CREATE TRIGGER ARC_CARTAO_CREDITO
+ON T_NS_CREDITO
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        JOIN T_NS_CARTAO c ON c.id_cartao = i.id_cartao
+        WHERE c.tp_cartao <> 'C'
+    )
+    BEGIN
+        RAISERROR(
+            'Violação de herança: Apenas cartões com tp_cartao = ''C'' podem ter registro em T_NS_CREDITO.',
+            16, 1
+        );
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END;
+END;
 GO
 ```
 
